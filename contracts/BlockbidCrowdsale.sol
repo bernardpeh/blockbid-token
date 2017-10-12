@@ -17,17 +17,18 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   uint public totalSupply;
   uint public icoEndTime;
   bool public goalReached = false;
+  bool public paused = false;
+
   mapping(address => uint) public weiContributed;
   address[] public contributors;
 
   event LogClaimRefund(address _address, uint _value);
 
-  function BlockbidCrowdsale(uint _goal, uint _cap, uint _startTime, uint _endTime, uint _icoEndTime, uint _rate, uint _earlyBonus, address _wallet)
+  function BlockbidCrowdsale(uint _goal, uint _cap, uint _startTime, uint _endTime, uint _rate, uint _earlyBonus, address _wallet)
   Crowdsale(_startTime, _endTime, _rate, _wallet) public {
     require(_cap > 0);
     require(_goal > 0);
 
-    icoEndTime = _icoEndTime;
     standardrate = _rate;
     earlybonus = _earlyBonus;
     cap = _cap;
@@ -43,23 +44,18 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   */
 
   function validPurchase() internal constant returns (bool) {
+
     updateRate();
 
-    if (hasEnded() && !goalReached) {
-      return false;
-    }
-
-    else {
-      bool withinPeriod = (now >= startTime && now <= endTime);
-      bool nonZeroPurchase = (msg.value >= 0.1 ether && msg.value <= 100 ether);
-      bool withinCap = (token.totalSupply() <= cap);
-      return withinPeriod && nonZeroPurchase && withinCap;
-    }
+    bool withinPeriod = (now >= startTime && now <= endTime);
+    bool withinPurchaseLimit = (msg.value >= 0.1 ether && msg.value <= 100 ether);
+    bool withinCap = (token.totalSupply() <= cap);
+    return withinPeriod && withinPurchaseLimit && withinCap && !paused;
   }
 
   // function that will determine how many tokens have been created
   function tokensPurchased() internal constant returns (uint) {
-    return rate.mul(msg.value)/1 ether;
+    return (rate.mul(msg.value)/1 ether).mul(100000000);
   }
 
   /*
@@ -72,23 +68,21 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
 
     uint weeklength = 604800;
 
-    if (hasEnded()) {
+
+    if (now >= startTime.add(weeklength.mul(4))) {
       rate = 200;
     }
-
+    else if (now >= startTime.add(weeklength.mul(3))) {
+      rate = standardrate;
+    }
+    else if (now >= startTime.add(weeklength.mul(2))) {
+      rate = standardrate.add(earlybonus.div(3));
+    }
+    else if (now >= startTime.add(weeklength)) {
+      rate = standardrate.add((earlybonus.mul(2).div(3)));
+    }
     else {
-      if (now >= startTime.add(weeklength.mul(3))) {
-        rate = standardrate;
-      }
-      else if (now >= startTime.add(weeklength.mul(2))) {
-        rate = standardrate.add(earlybonus.div(3));
-      }
-      else if (now >= startTime.add(weeklength)) {
-        rate = standardrate.add((earlybonus.mul(2).div(3)));
-      }
-      else {
-        rate = standardrate.add(earlybonus);
-      }
+      rate = standardrate.add(earlybonus);
     }
 
     return true;
@@ -97,12 +91,12 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   function buyTokens(address beneficiary) public payable {
     require(beneficiary != 0x0);
 
-    // enables wallet to bypass valid purchase requirements
+    // enable wallet to deposit funds post ico and goals not reached
     if (msg.sender == wallet) {
       require(hasEnded());
       require(!goalReached);
     }
-
+    // everybody else goes through standard validation
     else {
       require(validPurchase());
     }
@@ -151,9 +145,10 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
     return true;
   }
 
-  // @return true if crowdsale event has ended
-  function hasEnded() public constant returns (bool) {
-    return now >= icoEndTime;
+  // allow owner to pause ico in case there is something wrong
+  function setPaused(bool _val) onlyOwner public returns (bool) {
+    paused = _val;
+    return true;
   }
 
   // destroy contract and send all remaining ether back to wallet
@@ -163,6 +158,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
     selfdestruct(wallet);
   }
 
+  // create BID token
   function createTokenContract() internal returns (MintableToken) {
     return new BlockbidMintableToken();
   }
