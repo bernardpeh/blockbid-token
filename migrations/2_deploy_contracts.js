@@ -4,8 +4,8 @@ var endTime = startTime + (2419200 * 3)
 var rate = 300;
 var earlybonus = 60;
 var etherWallet = web3.eth.accounts[0];
-var cap = 30000000
-var goal =  1000000
+var cap = 30000000 * 100000000
+var goal =  1000000 * 100000000
 var icoEnd = startTime + (2419200);
 
 
