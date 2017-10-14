@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity 0.4.15;
 
 import 'zeppelin-solidity/contracts/crowdsale/Crowdsale.sol';
 import './BlockbidMintableToken.sol';
@@ -15,7 +15,6 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   uint public earlybonus;
   uint public standardrate;
   uint public totalSupply;
-  uint public icoEndTime;
   bool public goalReached = false;
   bool public paused = false;
 
@@ -66,7 +65,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   */
   function updateRate() internal returns (bool) {
 
-    uint weeklength = 604800;
+    uint weeklength = 86400;
 
 
     if (now >= startTime.add(weeklength.mul(4))) {
