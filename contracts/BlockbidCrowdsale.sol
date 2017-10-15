@@ -14,7 +14,6 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   uint public cap;
   uint public earlybonus;
   uint public standardrate;
-  uint public totalSupply;
   bool public goalReached = false;
   bool public paused = false;
 
