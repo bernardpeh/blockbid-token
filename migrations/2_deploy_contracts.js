@@ -1,7 +1,6 @@
 // var setup for contract deployment. Make sure its sometime in the future, else it will fail
 var startTime = web3.eth.getBlock(web3.eth.blockNumber).timestamp + 100;
-// ico for 8 days as a trial
-var endTime = startTime + (86400 * 8)
+var endTime = startTime + (604800 * 8)
 var rate = 300;
 var earlybonus = 60;
 var etherWallet = web3.eth.accounts[1];

@@ -53,7 +53,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
 
   // function that will determine how many tokens have been created
   function tokensPurchased() internal constant returns (uint) {
-    return (rate.mul(msg.value)/1 ether).mul(100000000);
+    return rate.mul(msg.value).mul(100000000).div(1 ether);
   }
 
   /*
@@ -64,7 +64,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   */
   function updateRate() internal returns (bool) {
 
-    uint weeklength = 86400;
+    uint weeklength = 604800;
 
 
     if (now >= startTime.add(weeklength.mul(4))) {
@@ -74,10 +74,10 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
       rate = standardrate;
     }
     else if (now >= startTime.add(weeklength.mul(2))) {
-      rate = standardrate.add(earlybonus.div(3));
+      rate = standardrate.add(earlybonus.sub(40));
     }
     else if (now >= startTime.add(weeklength)) {
-      rate = standardrate.add((earlybonus.mul(2).div(3)));
+      rate = standardrate.add(earlybonus.sub(20));
     }
     else {
       rate = standardrate.add(earlybonus);
