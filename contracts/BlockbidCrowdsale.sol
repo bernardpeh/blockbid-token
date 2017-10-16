@@ -26,6 +26,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   Crowdsale(_startTime, _endTime, _rate, _wallet) public {
     require(_cap > 0);
     require(_goal > 0);
+    require(_earlyBonus > 40);
 
     standardrate = _rate;
     earlybonus = _earlyBonus;
