@@ -16,17 +16,24 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   uint public standardrate;
   bool public goalReached = false;
   bool public paused = false;
+  uint public constant weeklength = 604800;
 
   mapping(address => uint) public weiContributed;
   address[] public contributors;
 
   event LogClaimRefund(address _address, uint _value);
 
+  modifier notPaused() {
+    if (paused) {
+      revert();
+    }
+    _;
+  }
+
   function BlockbidCrowdsale(uint _goal, uint _cap, uint _startTime, uint _endTime, uint _rate, uint _earlyBonus, address _wallet)
   Crowdsale(_startTime, _endTime, _rate, _wallet) public {
     require(_cap > 0);
     require(_goal > 0);
-    require(_earlyBonus > 40);
 
     standardrate = _rate;
     earlybonus = _earlyBonus;
@@ -41,7 +48,6 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
          - Needs to call updateRate() function to validate how much ether = 1 token
          -
   */
-
   function validPurchase() internal constant returns (bool) {
 
     updateRate();
@@ -49,7 +55,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
     bool withinPeriod = (now >= startTime && now <= endTime);
     bool withinPurchaseLimit = (msg.value >= 0.1 ether && msg.value <= 100 ether);
     bool withinCap = (token.totalSupply() <= cap);
-    return withinPeriod && withinPurchaseLimit && withinCap && !paused;
+    return withinPeriod && withinPurchaseLimit && withinCap;
   }
 
   // function that will determine how many tokens have been created
@@ -64,9 +70,6 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
     to give early bird discounts
   */
   function updateRate() internal returns (bool) {
-
-    uint weeklength = 604800;
-
 
     if (now >= startTime.add(weeklength.mul(4))) {
       rate = 200;
@@ -87,7 +90,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
     return true;
   }
 
-  function buyTokens(address beneficiary) public payable {
+  function buyTokens(address beneficiary) notPaused public payable {
     require(beneficiary != 0x0);
 
     // enable wallet to deposit funds post ico and goals not reached
@@ -133,7 +136,7 @@ contract BlockbidCrowdsale is Crowdsale, Ownable {
   }
 
   // if crowdsale is unsuccessful, investors can claim refunds here
-  function claimRefund() public returns (bool) {
+  function claimRefund() notPaused public returns (bool) {
     require(!goalReached);
     require(hasEnded());
     uint contributedAmt = weiContributed[msg.sender];
