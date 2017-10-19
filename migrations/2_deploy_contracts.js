@@ -1,5 +1,6 @@
-// var setup for contract deployment. Make sure its sometime in the future, else it will fail
-var startTime = web3.eth.getBlock(web3.eth.blockNumber).timestamp + 100;
+// var startTime = web3.eth.getBlock(web3.eth.blockNumber).timestamp + 100;
+// launch time is 21-10-2017, 1300 hrs GMT
+var startTime = 1508590800;
 var endTime = startTime + (604800 * 8)
 var rate = 300;
 var earlybonus = 60;
